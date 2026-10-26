@@ -5,16 +5,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Unzip and prepare
+      - name: List files
+        run: ls -lh
+      - name: Unzip project
         run: |
-          unzip -o zebda-army-android.zip || true
-          ls -R | head -n 100
-          # ابحث عن gradlew وين
-          find . -name "gradlew" -type f
-          # لو في مجلد android-app انقله للرئيسية
-          if [ -d "android-app" ]; then cp -r android-app/* .; fi
-          # لو فك الضغط سوى مجلد ثاني
-          for d in */; do if [ -f "$d/gradlew" ]; then cp -r "$d"/* .; fi; done
+          ZIP=$(ls *.zip | head -n 1)
+          echo "Found zip: $ZIP"
+          unzip -o "$ZIP"
+          ls -lh
+          # انقل كل الملفات للجذر
+          if [ -d "android-app" ]; then mv android-app/* . -f || true; fi
+          if [ -d "zebda-army-android" ]; then mv zebda-army-android/* . -f || true; fi
+          # لو فيه مجلد واحد فقط جواه المشروع
+          for d in */; do if [ -f "$d/gradlew" ]; then echo "Found gradlew in $d"; cp -r "$d"* .; cp -r "$d".* . 2>/dev/null || true; fi; done
+          ls -lh
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -22,12 +26,10 @@ jobs:
           distribution: 'temurin'
       - name: Build APK
         run: |
-          ls -la
-          find . -name "gradlew"
-          chmod +x ./gradlew || chmod +x */gradlew || true
-          ./gradlew assembleDebug || (find . -name gradlew -exec chmod +x {} \; -exec {} assembleDebug \;)
+          chmod +x gradlew
+          ./gradlew assembleDebug --info
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ZEBDA-Army-APK
-          path: "**/app/build/outputs/apk/debug/*.apk"
+          path: app/build/outputs/apk/debug/*.apk
