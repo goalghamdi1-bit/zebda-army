@@ -7,20 +7,18 @@ jobs:
       - uses: actions/checkout@v4
       - name: Unzip and prepare
         run: |
-          unzip -o zebda-army-android.zip
+          unzip -o zebda-army-android.zip || true
           if [ -d "android-app" ]; then cp -r android-app/. .; rm -rf android-app; fi
-          rm -f zebda-army-android.zip
+          ls -la
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
       - name: Build APK
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --stacktrace
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
