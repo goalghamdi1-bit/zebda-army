@@ -9,119 +9,44 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4'
       - name: Create Project
         run: |
-          rm -rf app gradle gradlew *.zip build.gradle settings.gradle
+          rm -rf app gradle gradlew build.gradle settings.gradle
           mkdir -p app/src/main/java/com/zebda/army
           mkdir -p app/src/main/res/values
-          mkdir -p gradle/wrapper
           echo "include ':app'" > settings.gradle
-          
           cat > build.gradle <<'EOF'
           buildscript {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-              dependencies {
-                  classpath 'com.android.tools.build:gradle:8.2.2'
-              }
+              repositories { google(); mavenCentral() }
+              dependencies { classpath 'com.android.tools.build:gradle:8.2.2' }
           }
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-          task clean(type: Delete) {
-              delete rootProject.buildDir
-          }
+          allprojects { repositories { google(); mavenCentral() } }
           EOF
-          
           cat > app/build.gradle <<'EOF'
-          apply plugin: 'com.android.application'
+          plugins { id 'com.android.application' }
           android {
               namespace 'com.zebda.army'
               compileSdk 34
               defaultConfig {
                   applicationId "com.zebda.army"
-                  minSdk 24
-                  targetSdk 34
-                  versionCode 1
-                  versionName "1.0"
-              }
-              buildTypes {
-                  release { minifyEnabled false }
-                  debug { minifyEnabled false }
+                  minSdk 24; targetSdk 34; versionCode 1; versionName "1.0"
               }
               compileOptions {
                   sourceCompatibility JavaVersion.VERSION_17
                   targetCompatibility JavaVersion.VERSION_17
               }
           }
-          dependencies {
-              implementation 'androidx.appcompat:appcompat:1.6.1'
-          }
+          dependencies { implementation 'androidx.appcompat:appcompat:1.6.1' }
           EOF
-          
-          cat > app/src/main/AndroidManifest.xml <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-              <application android:label="ZEBDA Army" android:theme="@android:style/Theme.NoTitleBar">
-                  <activity android:name=".MainActivity" android:exported="true">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN"/>
-                          <category android:name="android.intent.category.LAUNCHER"/>
-                      </intent-filter>
-                  </activity>
-                  <service android:name=".ArmyForegroundService" android:foregroundServiceType="specialUse">
-                      <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="ZEBDA"/>
-                  </service>
-              </application>
-          </manifest>
-          EOF
-          
-          cat > app/src/main/java/com/zebda/army/MainActivity.java <<'EOF'
-          package com.zebda.army;
-          import android.app.Activity;
-          import android.os.Bundle;
-          import android.widget.TextView;
-          import android.view.Gravity;
-          public class MainActivity extends Activity {
-              protected void onCreate(Bundle b) {
-                  super.onCreate(b);
-                  TextView tv = new TextView(this);
-                  tv.setText("ZEBDA ARMY\nجيش الزبدة جاهز 💪🔥");
-                  tv.setGravity(Gravity.CENTER);
-                  tv.setTextSize(24);
-                  tv.setPadding(50,300,50,300);
-                  setContentView(tv);
-              }
-          }
-          EOF
-          
-          cat > app/src/main/java/com/zebda/army/ArmyForegroundService.java <<'EOF'
-          package com.zebda.army;
-          import android.app.Service;
-          import android.content.Intent;
-          import android.os.IBinder;
-          public class ArmyForegroundService extends Service {
-              public IBinder onBind(Intent i) { return null; }
-              public int onStartCommand(Intent i, int f, int s) { return START_STICKY; }
-          }
-          EOF
-          
-          echo "<resources><string name='app_name'>ZEBDA Army</string></resources>" > app/src/main/res/values/strings.xml
-          printf "distributionBase=GRADLE_USER_HOME\ndistributionPath=wrapper/dists\ndistributionUrl=https\\://services.gradle.org/distributions/gradle-8.4-bin.zip\nzipStoreBase=GRADLE_USER_HOME\nzipStorePath=wrapper/dists\n" > gradle/wrapper/gradle-wrapper.properties
-          curl -sL -o gradle/wrapper/gradle-wrapper.jar https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar
-          printf "#!/bin/sh\nexec java -jar gradle/wrapper/gradle-wrapper.jar \"\$@\"\n" > gradlew
-          chmod +x gradlew
-
-      - uses: gradle/actions/setup-gradle@v3
+          echo '<?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android"><uses-permission android:name="android.permission.FOREGROUND_SERVICE"/><uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/><application android:label="ZEBDA Army"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity><service android:name=".ArmyForegroundService" android:foregroundServiceType="specialUse"><property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="ZEBDA"/></service></application></manifest>' > app/src/main/AndroidManifest.xml
+          echo 'package com.zebda.army; import android.app.Activity; import android.os.Bundle; import android.widget.TextView; import android.view.Gravity; public class MainActivity extends Activity { protected void onCreate(Bundle b){ super.onCreate(b); TextView tv=new TextView(this); tv.setText("ZEBDA ARMY\nجيش الزبدة جاهز"); tv.setGravity(Gravity.CENTER); tv.setTextSize(24); tv.setPadding(50,300,50,300); setContentView(tv); } }' > app/src/main/java/com/zebda/army/MainActivity.java
+          echo 'package com.zebda.army; import android.app.Service; import android.content.Intent; import android.os.IBinder; public class ArmyForegroundService extends Service { public IBinder onBind(Intent i){return null;} public int onStartCommand(Intent i,int f,int s){return START_STICKY;} }' > app/src/main/java/com/zebda/army/ArmyForegroundService.java
+          echo '<resources><string name="app_name">ZEBDA Army</string></resources>' > app/src/main/res/values/strings.xml
       - name: Build APK
-        run: ./gradlew assembleDebug --no-daemon
-
+        run: gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
           name: ZEBDA-Army-APK
